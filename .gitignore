@@ -1,0 +1,10 @@
+# Salidas generadas: son GB de Excel por corrida, no codigo.
+data/output/
+
+# Entregables ya enviados, se conservan en disco pero no se versionan.
+0 - NS 2024/
+0 - NS ene-ago 2025/
+
+__pycache__/
+*.pyc
+debug.log

@@ -6,43 +6,15 @@ from openpyxl.drawing.image import Image
 from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
 
-DATA_DIR = Path("data")
+# La raiz del proyecto queda un nivel arriba: este script vive en src/.
+BASE_DIR = Path(__file__).resolve().parents[1]
+DATA_DIR = BASE_DIR / "data"
 INPUT_DIR = DATA_DIR / "input"
 OUTPUT_DIR = DATA_DIR / "output"
 DEFAULT_LOGO = INPUT_DIR / "Soriana-Logo.png"
-DEFAULT_INPUT_FILE = INPUT_DIR / "Base1.xlsx"
-SUMMARY_INPUT_FILE = INPUT_DIR / "Base1.xlsx"
-SUMMARY_OUTPUT_FILE = OUTPUT_DIR / "Resumen Proveedores NS 2020-2024.xlsx"
-
-EXCLUDED_PEDIDOS = {
-    "110607909",
-    "110607910",
-    "121593940",
-    "121647126",
-    "107650539",
-    "107650540",
-    "108365608",
-    "124886120",
-    "124970463",
-    "124975616",
-    "124975625",
-    "125778495",
-    "128215996",
-    "128222419",
-    "128385242",
-    "120579872",
-    "118212854",
-    "120281210",
-    "120387414",
-    "120397393",
-    "120399826",
-    "120401341",
-    "120401342",
-    "124505080",
-    "124637548",
-    "124637549",
-    "124645961",
-}
+DEFAULT_INPUT_FILE = INPUT_DIR / "Base 2025.xlsx"
+SUMMARY_INPUT_FILE = INPUT_DIR / "Base 2025.xlsx"
+SUMMARY_OUTPUT_FILE = OUTPUT_DIR / "Resumen Proveedores NS Ene-Ago 2025.xlsx"
 
 
 def sanitize_filename(text):
@@ -62,19 +34,6 @@ def load_data(file_path, sheet_name=0):
     except Exception as e:
         print(f"An error occurred while loading the data: {e}")
         return None
-
-
-def filter_pedidos(df, excluded_pedidos, column_name="Pedido"):
-    """Remove rows whose pedido value is in the excluded list."""
-    if column_name not in df.columns:
-        print(f"[ERROR] Column '{column_name}' not found. Available columns: {list(df.columns)}")
-        return df
-
-    before = len(df)
-    filtered_df = df[~df[column_name].astype(str).isin(excluded_pedidos)]
-    removed = before - len(filtered_df)
-    print(f"[INFO] Removed {removed} rows with excluded pedidos. Remaining rows: {len(filtered_df)}")
-    return filtered_df
 
 
 def _normalize_col_name(name) -> str:
@@ -194,7 +153,7 @@ def export_by_proveedor(df, prov_col="Proveedor", nombre_col="Nombre", output_di
         folder_path = out_root / folder_name
         folder_path.mkdir(parents=True, exist_ok=True)
 
-        file_name = sanitize_filename(f"{prov_str} {nombre_str} - NS 2020-2024") + ".xlsx"
+        file_name = sanitize_filename(f"{prov_str} {nombre_str} - NS Ene-Ago 2025") + ".xlsx"
         file_path = folder_path / file_name
 
         consolidado = build_consolidado(
@@ -279,7 +238,7 @@ def format_workbook(path, proveedor_display, nombre_display, logo_path=DEFAULT_L
 
         _place_title(2, "Tiendas Soriana, S.A. de C.V.", size=14, bold=True)
         _place_title(3, f"{proveedor_display} {nombre_display}", size=13, bold=True)
-        _place_title(4, "Nivel de Servicio 2020-2024", size=12, bold=True)
+        _place_title(4, "Nivel de Servicio Ene-Ago 2025", size=12, bold=True)
 
         # Logo
         logo_file = Path(logo_path)
@@ -382,15 +341,11 @@ def generate_resumen_proveedores(
     input_file=SUMMARY_INPUT_FILE,
     output_file=SUMMARY_OUTPUT_FILE,
     logo_path=DEFAULT_LOGO,
-    excluded_pedidos=EXCLUDED_PEDIDOS,
 ):
-    """Crear el archivo 'Resumen Proveedores NS 2020-2024' directamente desde Base2.xlsx."""
+    """Crear el archivo 'Resumen Proveedores NS Ene-Ago 2025' directamente desde Base 2025.xlsx."""
     data = load_data(input_file)
     if data is None:
         return
-
-    if excluded_pedidos:
-        data = filter_pedidos(data, excluded_pedidos, column_name="Pedido")
 
     resumen = build_resumen_proveedores(data)
     if resumen is None:
@@ -405,7 +360,7 @@ def generate_resumen_proveedores(
         format_workbook(
             output_file,
             proveedor_display="Resumen Proveedores",
-            nombre_display="NS 2020-2024",
+            nombre_display="NS Ene-Ago 2025",
             logo_path=logo_path,
         )
     except Exception as exc:
@@ -418,8 +373,7 @@ if __name__ == "__main__":
     file_path = DEFAULT_INPUT_FILE
     data = load_data(file_path)
     if data is not None:
-        filtered_data = filter_pedidos(data, EXCLUDED_PEDIDOS, column_name="Pedido")
-        print(filtered_data.head())
-        export_by_proveedor(filtered_data, prov_col="Proveedor", nombre_col="Nombre", output_dir=OUTPUT_DIR)
+        print(data.head())
+        export_by_proveedor(data, prov_col="Proveedor", nombre_col="Nombre", output_dir=OUTPUT_DIR)
 
     generate_resumen_proveedores()
