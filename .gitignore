@@ -8,3 +8,11 @@ data/output/
 __pycache__/
 *.pyc
 debug.log
+
+# Bases de entrada demasiado grandes para GitHub (>100 MB); se conservan solo en disco.
+data/input/Base.xlsx
+data/input/Base1.xlsx
+data/input/Base - Copy.xlsx
+
+# Entregables y logs
+entregables/
